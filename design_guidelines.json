@@ -1,0 +1,196 @@
+{
+  "typography": {
+    "font_family": {
+      "headings": "Manrope, sans-serif",
+      "body": "Inter, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-4xl md:text-5xl font-bold tracking-tight",
+      "h2": "text-3xl md:text-4xl font-semibold tracking-tight",
+      "h3": "text-2xl font-semibold tracking-tight",
+      "h4": "text-xl font-medium",
+      "body_large": "text-lg leading-relaxed",
+      "body_default": "text-base leading-relaxed",
+      "caption": "text-sm text-muted-foreground"
+    }
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "DEFAULT": "#1F4E79",
+        "foreground": "#FFFFFF",
+        "hover": "#163A5C"
+      },
+      "secondary": {
+        "DEFAULT": "#4CAF50",
+        "foreground": "#FFFFFF",
+        "hover": "#388E3C"
+      },
+      "accent": {
+        "DEFAULT": "#E3F2FD",
+        "foreground": "#1F4E79"
+      },
+      "background": {
+        "DEFAULT": "#F8FAFC",
+        "paper": "#FFFFFF"
+      },
+      "text": {
+        "primary": "#0F172A",
+        "secondary": "#64748B",
+        "muted": "#94A3B8"
+      },
+      "status": {
+        "success": "#4CAF50",
+        "warning": "#F59E0B",
+        "error": "#EF4444",
+        "info": "#3B82F6"
+      }
+    },
+    "usage": {
+      "primary": "Main actions, headers, active states",
+      "secondary": "Success states, call-to-actions requiring attention",
+      "accent": "Background highlights, subtle interactive elements",
+      "background": "Page background (slate-50)",
+      "paper": "Card backgrounds, modal backgrounds"
+    }
+  },
+  "visual_enhancers": {
+    "shadows": {
+      "card": "shadow-sm hover:shadow-md transition-shadow duration-200",
+      "dropdown": "shadow-lg border border-slate-100",
+      "modal": "shadow-2xl"
+    },
+    "borders": {
+      "default": "border border-slate-200",
+      "active": "border-primary/50",
+      "radius": "rounded-lg"
+    },
+    "glassmorphism": {
+      "header": "bg-white/80 backdrop-blur-md border-b border-slate-200/50",
+      "overlay": "bg-slate-900/20 backdrop-blur-sm"
+    }
+  },
+  "component_name": {
+    "button": "Button",
+    "card": "Card",
+    "input": "Input",
+    "dialog": "Dialog",
+    "dropdown": "DropdownMenu",
+    "badge": "Badge",
+    "avatar": "Avatar",
+    "scroll_area": "ScrollArea",
+    "tabs": "Tabs",
+    "sheet": "Sheet",
+    "table": "Table"
+  },
+  "grids": {
+    "dashboard": "grid grid-cols-1 md:grid-cols-12 gap-6",
+    "cards": "grid grid-cols-1 md:grid-cols-3 gap-6",
+    "form": "grid grid-cols-1 gap-4"
+  },
+  "layouts": {
+    "landing": {
+      "structure": "flex flex-col min-h-screen",
+      "hero": "relative h-[60vh] flex items-center justify-center bg-slate-900 text-white overflow-hidden",
+      "features": "py-20 px-4 md:px-8 max-w-7xl mx-auto"
+    },
+    "resident": {
+      "structure": "flex flex-col h-screen bg-slate-50",
+      "chat_container": "flex-1 overflow-hidden flex flex-col max-w-3xl mx-auto w-full bg-white shadow-sm border-x border-slate-100",
+      "input_area": "p-4 border-t border-slate-100 bg-white"
+    },
+    "worker": {
+      "structure": "flex h-screen overflow-hidden",
+      "sidebar": "w-80 border-r border-slate-200 bg-white hidden md:flex flex-col",
+      "map_area": "flex-1 relative bg-slate-100",
+      "mobile_nav": "md:hidden fixed bottom-0 w-full bg-white border-t border-slate-200 p-4"
+    },
+    "admin": {
+      "structure": "flex h-screen bg-slate-50",
+      "sidebar": "w-64 bg-slate-900 text-slate-300 hidden lg:block",
+      "main": "flex-1 overflow-auto p-8"
+    }
+  },
+  "motion": {
+    "transitions": "transition-all duration-200 ease-in-out",
+    "hover": "hover:-translate-y-1 hover:shadow-lg",
+    "fade_in": "animate-in fade-in duration-500",
+    "slide_up": "animate-in slide-in-from-bottom-4 duration-500"
+  },
+  "accessibility": {
+    "contrast": "Ensure text meets WCAG AA standards (4.5:1)",
+    "focus": "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+    "aria": "Use aria-labels for icon-only buttons",
+    "keyboard": "Ensure all interactive elements are keyboard accessible"
+  },
+  "media": {
+    "images": "Use object-cover for all background images. Add alt text.",
+    "icons": "Lucide React icons (stroke-width=1.5 for clean look)"
+  },
+  "3d_libraries": {
+    "charts": "Recharts (ResponsiveContainer, AreaChart, BarChart, PieChart)",
+    "maps": "Leaflet (react-leaflet) with OpenStreetMap tiles"
+  },
+  "image_urls": {
+    "landing_hero": {
+      "url": "https://images.unsplash.com/photo-1662917574216-dd5ab10fab8a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBjaXR5JTIwc2t5bGluZSUyMGJsdWUlMjBza3l8ZW58MHx8fHwxNzcyOTE4OTYyfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Modern city skyline with blue sky",
+      "category": "hero"
+    },
+    "resident_persona": {
+      "url": "https://images.unsplash.com/photo-1758275557142-e4e5e7842d52?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzZ8MHwxfHNlYXJjaHwxfHxkaXZlcnNlJTIwc2t5bGluZSUyMGJsdWUlMjBza3l8ZW58MHx8fHwxNzcyOTE4OTY3fDA&ixlib=rb-4.1.0&q=85",
+      "description": "Diverse community people in park",
+      "category": "card_image"
+    },
+    "worker_persona": {
+      "url": "https://images.unsplash.com/photo-1762438440845-f55f9d307704?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwxfHxjaXR5JTIwbWFpbnRlbmFuY2UlMjB3b3JrZXIlMjBzYWZldHklMjB2ZXN0fGVufDB8fHx8MTc3MjkxODk3Mnww&ixlib=rb-4.1.0&q=85",
+      "description": "City maintenance workers",
+      "category": "card_image"
+    },
+    "admin_persona": {
+      "url": "https://images.unsplash.com/photo-1766898588916-71f3f68f60ab?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzJ8MHwxfHNlYXJjaHwxfHxkYXRhJTIwYW5hbHl0aWNzJTIwZGFzaGJvYXJkJTIwYWJzdHJhY3QlMjB0ZWNobm9sb2d5fGVufDB8fHx8MTc3MjkxODk4N3ww&ixlib=rb-4.1.0&q=85",
+      "description": "Abstract data analytics pattern",
+      "category": "card_image"
+    }
+  },
+  "component_path": {
+    "ui": "/app/frontend/src/components/ui",
+    "pages": "/app/frontend/src/pages",
+    "layouts": "/app/frontend/src/layouts"
+  },
+  "instructions_to_main_agent": [
+    "Use .js or .jsx extension for all React files.",
+    "Implement a 'Layout' component that wraps the application and handles the theme.",
+    "Use 'lucide-react' for icons.",
+    "Ensure all interactive elements have a 'data-testid' attribute.",
+    "Use 'react-router-dom' for navigation.",
+    "Mock all data API calls with realistic JSON data.",
+    "For the Map component, use 'react-leaflet' and ensure CSS is imported.",
+    "For Charts, use 'recharts' with the defined color palette.",
+    "The 'Resident Portal' should feel like a chat app (e.g., WhatsApp/Messenger) but cleaner.",
+    "The 'Worker Portal' should be high-density and utility-focused.",
+    "The 'Admin Portal' should be a classic dashboard with widgets."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "You tend to converge toward generic, 'on distribution' outputs. In frontend design, this creates what users call the 'AI slop' aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur)",
+    "You MUST NOT apply universal transition. Eg: 'transition: all'. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms",
+    "You MUST NOT center align the app container, ie do not add '.App { text-align: center; }' in the css file. This disrupts the human natural reading flow of text",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Main agent relies on these image URLs. Missing categories (especially sponsor logos) = main agent will use placeholder text which is FORBIDDEN",
+    "Prioritize using pre-existing components from src/components/ui when applicable",
+    "Create new components that match the style and conventions of existing components when needed",
+    "Examine existing components to understand the project's component patterns before creating new ones",
+    "Components MUST use named exports (export const ComponentName = ...)",
+    "Pages MUST use default exports (export default function PageName() {...})",
+    "Use 'sonner' for toasts. Sonner component are located in '/app/src/components/ui/sonner.tsx'"
+  ]
+}
