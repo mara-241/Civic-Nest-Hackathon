@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Header } from '../../components/layout/Header';
 import { Sidebar } from '../../components/layout/Sidebar';
-import { IncidentMap } from '../../components/maps/IncidentMap';
+import { HotspotIntelligenceMap } from '../../components/maps/HotspotIntelligenceMap';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -16,7 +16,7 @@ import { ErrorState } from '../../components/ui/ErrorState';
 import { PriorityBadge, StatusBadge } from '../../components/ui/PriorityBadge';
 import { RecurrenceBar } from '../../components/ui/RecurrenceBar';
 import { getOpsQueue, updateIncidentStatus } from '../../services/api';
-import { ListChecks, Map, ClipboardList, Search, Filter, Layers, X, UserPlus, RefreshCw } from 'lucide-react';
+import { ListChecks, Map, ClipboardList, Search, Filter, Layers, X, UserPlus, RefreshCw, Flame, AlertTriangle as AlertTriangleIcon } from 'lucide-react';
 import { issueCategories, zones, statuses, priorities } from '../../mockData/incidents';
 import { cn } from '../../lib/utils';
 import { format } from 'date-fns';
