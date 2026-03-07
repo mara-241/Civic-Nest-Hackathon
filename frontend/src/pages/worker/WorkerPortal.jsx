@@ -42,6 +42,8 @@ export default function WorkerPortal() {
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(true);
+  const [showHotspots, setShowHotspots] = useState(true);
+  const [showEmergingRisks, setShowEmergingRisks] = useState(true);
   const [activeTab, setActiveTab] = useState('queue');
   
   // Filters
@@ -298,26 +300,50 @@ export default function WorkerPortal() {
               <Card className="h-full border-slate-200">
                 <CardHeader className="pb-3 border-b border-slate-100">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-semibold">Hotspot Map</CardTitle>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowHeatmap(!showHeatmap)}
-                      className={cn("gap-2", showHeatmap && "bg-civic-blue/5 border-civic-blue/30 text-civic-blue")}
-                      data-testid="heatmap-toggle"
-                    >
-                      <Layers className="w-4 h-4" strokeWidth={1.5} />
-                      {showHeatmap ? 'Hide Heatmap' : 'Show Heatmap'}
-                    </Button>
+                    <CardTitle className="text-lg font-semibold">Civic Hotspot Intelligence Map</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowHeatmap(!showHeatmap)}
+                        className={cn("gap-2", showHeatmap && "bg-civic-blue/5 border-civic-blue/30 text-civic-blue")}
+                        data-testid="heatmap-toggle"
+                      >
+                        <Layers className="w-4 h-4" strokeWidth={1.5} />
+                        Heatmap
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowHotspots(!showHotspots)}
+                        className={cn("gap-2", showHotspots && "bg-red-50 border-red-200 text-red-600")}
+                        data-testid="hotspots-toggle"
+                      >
+                        <Flame className="w-4 h-4" strokeWidth={1.5} />
+                        Hotspots
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowEmergingRisks(!showEmergingRisks)}
+                        className={cn("gap-2", showEmergingRisks && "bg-amber-50 border-amber-200 text-amber-600")}
+                        data-testid="emerging-risks-toggle"
+                      >
+                        <AlertTriangleIcon className="w-4 h-4" strokeWidth={1.5} />
+                        Emerging
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 h-[calc(100vh-280px)]">
                   {loading ? (
                     <MapSkeleton />
                   ) : (
-                    <IncidentMap 
+                    <HotspotIntelligenceMap 
                       incidents={filteredIncidents}
                       showHeatmap={showHeatmap}
+                      showHotspots={showHotspots}
+                      showEmergingRisks={showEmergingRisks}
                       onIncidentClick={setSelectedIncident}
                     />
                   )}
