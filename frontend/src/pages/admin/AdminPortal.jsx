@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 import { ChartSkeleton, TableSkeleton } from '../../components/ui/LoadingSkeleton';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { RecurrenceBar } from '../../components/ui/RecurrenceBar';
+import { CivicHealthScore } from '../../components/ui/CivicHealthScore';
+import { InterventionImpactCard } from '../../components/ui/InterventionImpactCard';
 import { getInsights, getEscalations, createEscalation } from '../../services/api';
 import { BarChart3, TrendingUp, AlertOctagon, Activity, CheckCircle, Clock, AlertTriangle, Plus, Rocket } from 'lucide-react';
 import { issueCategories, interventionTypes, zones } from '../../mockData/incidents';
@@ -134,10 +136,27 @@ export default function AdminPortal() {
                     />
                   </div>
 
-                  {/* Charts */}
+                  {/* Charts Row */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2">
+                      <TrendChart data={insights.trends} />
+                    </div>
+                    <CivicHealthScore 
+                      overallScore={72}
+                      trend={4}
+                    />
+                  </div>
+
+                  {/* Category Chart and Impact Card */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <TrendChart data={insights.trends} />
                     <CategoryChart data={insights.categoryBreakdown} />
+                    <InterventionImpactCard
+                      zone="Zone 3"
+                      issueCategory="Illegal Dumping"
+                      interventionType="Cleanup Campaign"
+                      beforeCount={21}
+                      afterCount={8}
+                    />
                   </div>
 
                   {/* Zone Risk Table */}
