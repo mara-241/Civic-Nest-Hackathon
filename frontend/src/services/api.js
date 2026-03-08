@@ -944,6 +944,23 @@ export const getEscalations = async () => {
   }
 };
 
+export const getResidentCategories = async () => {
+  try {
+    const payload = await apiRequest('/datasets/categories', { role: ROLE.RESIDENT });
+    return {
+      categories: payload.categories || [],
+      byDataset: payload.by_dataset || {},
+      lastRefreshAt: payload.last_refresh_at || null,
+    };
+  } catch (err) {
+    return withFallback('getResidentCategories', err, async () => ({
+      categories: ['Illegal Dumping', 'Noise Complaint', 'Road Damage', 'Street Light Outage', 'Standing Water'],
+      byDataset: {},
+      lastRefreshAt: null,
+    }));
+  }
+};
+
 // Resident reports API
 export const getMyReports = async () => {
   return loadResidentReports();

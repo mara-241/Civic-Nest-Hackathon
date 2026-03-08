@@ -12,9 +12,10 @@ import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { PriorityBadge } from '../../components/ui/PriorityBadge';
 import { RecurrenceBar } from '../../components/ui/RecurrenceBar';
 import { AIInsightPanel } from '../../components/ui/AIInsightPanel';
-import { sendChatMessage, getMyReports } from '../../services/api';
+import { sendChatMessage, getMyReports, getResidentCategories } from '../../services/api';
 import { MessageSquare, FileText, Clock } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { issueCategories as canonicalIssueCategories } from '../../mockData/incidents';
 
 const tabRouteMap = {
   assistant: '/resident',
@@ -28,12 +29,7 @@ const routeTabMap = {
   '/resident/followup': 'followup',
 };
 
-const suggestedQueries = [
-  "There is illegal dumping behind my building",
-  "I found a pothole on my street",
-  "Standing water creating mosquito problems",
-  "Street lights are out in my neighborhood"
-];
+const FINALIZED_CATEGORIES = [...canonicalIssueCategories];
 
 // Map issues to categories and zones for AI insight
 const issueMapping = {
@@ -58,6 +54,7 @@ const getIssueDetails = (message) => {
   }
   return issueMapping.default;
 };
+
 
 const LOCATION_HINT_RE = /(\b\d+[A-Za-z]?\s+[A-Za-z0-9 .,'\-]+(?:street|st|road|rd|avenue|ave|lane|ln|drive|dr|way|close|court|ct|boulevard|blvd|terrace|place|pl)\b.*)|(\b(?:exact location|location|address|at|near)\s*[:\-]\s*.+)|(\b[A-Za-z0-9 .,'\-]{2,40}\s+(?:and|&)\s+[A-Za-z0-9 .,'\-]{2,40}\b)/i;
 
@@ -120,6 +117,8 @@ export default function ResidentPortal() {
   const [reports, setReports] = useState([]);
   const [attachments, setAttachments] = useState([]);
   const [intakeDraft, setIntakeDraft] = useState({ reporterName: '', exactLocation: '', completedIncidentId: '' });
+  const [datasetCategories, setDatasetCategories] = useState([]);
+  const [guidedCategory, setGuidedCategory] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
   const scrollRef = useRef(null);
@@ -165,6 +164,18 @@ export default function ResidentPortal() {
     });
     return () => { active = false; };
   }, [isReportsPage, messages.length]);
+
+  useEffect(() => {
+    let active = true;
+    getResidentCategories()
+      .then((payload) => {
+        if (active) setDatasetCategories(payload?.categories || []);
+      })
+      .catch(() => {
+        if (active) setDatasetCategories([]);
+      });
+    return () => { active = false; };
+  }, []);
 
   const handleSend = async (message = input) => {
     const trimmedMessage = String(message || '').trim();
@@ -215,8 +226,15 @@ export default function ResidentPortal() {
       && Boolean(nextDraft.exactLocation)
       && (!parsedName || !parsedLocation);
 
-    const outboundMessage = shouldAugmentForIntake
-      ? `${renderedMessage}\n\nReporter name: ${nextDraft.reporterName}\nExact location: ${nextDraft.exactLocation}`
+    const contextLines = [];
+    if (guidedCategory) contextLines.push(`Issue category: ${guidedCategory}`);
+    if (shouldAugmentForIntake) {
+      contextLines.push(`Reporter name: ${nextDraft.reporterName}`);
+      contextLines.push(`Exact location: ${nextDraft.exactLocation}`);
+    }
+
+    const outboundMessage = contextLines.length
+      ? `${renderedMessage}\n\n${contextLines.join('\n')}`
       : renderedMessage;
 
     setIsLoading(true);
@@ -273,6 +291,11 @@ export default function ResidentPortal() {
   const handleTabChange = (nextTab) => {
     setActiveTab(nextTab);
     navigate(tabRouteMap[nextTab] || '/resident');
+  };
+
+  const handleCategorySelect = (category) => {
+    setGuidedCategory(category);
+    inputRef.current?.focus();
   };
 
   return (
@@ -341,25 +364,47 @@ export default function ResidentPortal() {
                 </div>
               </ScrollArea>
 
-              {messages.length <= 1 && (
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
-                  <p className="text-xs text-slate-500 mb-3 font-medium">Quick suggestions:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {suggestedQueries.map((query) => (
+              <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50" data-testid="resident-quick-intake">
+                <p className="text-xs text-slate-500 mb-3 font-medium">Select a category:</p>
+                <div className="flex flex-wrap gap-2">
+                  {(datasetCategories.length ? datasetCategories : FINALIZED_CATEGORIES).map((cat) => {
+                    const isSelected = guidedCategory === cat;
+                    return (
                       <Button
-                        key={query}
-                        variant="outline"
+                        key={cat}
+                        variant={isSelected ? 'default' : 'outline'}
                         size="sm"
-                        className="text-xs bg-white hover:bg-civic-blue/5 hover:border-civic-blue/30 hover:text-civic-blue"
-                        onClick={() => handleSend(query)}
-                        data-testid="suggested-query"
+                        className={cn(
+                          'text-xs',
+                          isSelected
+                            ? 'bg-civic-blue text-white hover:bg-civic-blue-hover'
+                            : 'bg-white hover:bg-civic-blue/5 hover:border-civic-blue/30 hover:text-civic-blue'
+                        )}
+                        onClick={() => handleCategorySelect(cat)}
+                        data-testid="resident-category-chip"
                       >
-                        {query}
+                        {cat}
                       </Button>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
-              )}
+
+                {guidedCategory && (
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <p className="text-xs text-slate-600">
+                      Category set to <span className="font-semibold text-civic-blue">{guidedCategory}</span>. Type your name, exact location, and issue details below.
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-7"
+                      onClick={() => setGuidedCategory('')}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                )}
+              </div>
 
               <div className="p-4 border-t border-slate-100 bg-white">
                 {attachments.length > 0 && (
@@ -470,7 +515,7 @@ const MessageBubble = ({ message }) => {
         </div>
         
         {/* Resident report metadata (lean intake UX) */}
-        {!isWelcome && !isError && message.content?.ops?.incident_id && /report has been logged/i.test(answer || '') && (
+        {!isWelcome && !isError && message.content?.ops?.incident_id && (
           <Card className="border-slate-200 max-w-[85%]">
             <CardContent className="py-3 px-4">
               <p className="text-xs text-slate-500">Report ID</p>
