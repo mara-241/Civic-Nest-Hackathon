@@ -1,6 +1,7 @@
 // API service layer - live backend integration with mock fallback (no UI changes)
 import { mockIncidents, issueCategories, interventionTypes } from '../mockData/incidents';
 import { mockInsights, mockEscalations } from '../mockData/insights';
+import { normalizeIncidentId, normalizeIncidentStatus, normalizeIssueCategory, sanitizeResidentCategories } from '../lib/civicNormalization';
 
 const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || '').replace(/\/$/, '');
 const AUTH_TOKEN = process.env.REACT_APP_AUTH_TOKEN || '';
@@ -216,24 +217,16 @@ async function apiRequest(path, { method = 'GET', role = ROLE.RESIDENT, body } =
   return parsed;
 }
 
-function normalizeIncidentId(raw) {
-  const value = String(raw || '').trim();
-  if (!value) return null;
-  if (/^INC-[A-Z0-9]+$/i.test(value)) return value.toUpperCase();
-  if (/^inc_[a-z0-9]+$/i.test(value)) return `INC-${value.slice(4).toUpperCase()}`;
-  return value;
-}
-
 function normalizeIncident(item = {}) {
   return {
     incident_id: normalizeIncidentId(item.incident_id || item.id) || `INC-${Math.floor(Math.random() * 9000 + 1000)}`,
     source_dataset: item.source_dataset || 'Civic Source',
-    issue_category: item.issue_category || 'General Civic Issue',
+    issue_category: normalizeIssueCategory(item.issue_category),
     reported_at: item.reported_at || item.last_action_at || new Date().toISOString(),
     lat: item.lat ?? null,
     lon: item.lon ?? null,
     zone: item.zone || 'Unknown Zone',
-    status: item.status || 'new',
+    status: normalizeIncidentStatus(item.status),
     priority: item.priority || 'medium',
     recurrence_score: Number(item.recurrence_score ?? 0.4),
     owner: item.owner || null,
@@ -258,13 +251,13 @@ function normalizeEscalation(item = {}) {
   return {
     id: item.id || item.escalation_id || `ESC-${Math.floor(Math.random() * 9000 + 1000)}`,
     area: item.area || item.zone || 'Unknown Area',
-    issue_category: item.issue_category || 'General Civic Issue',
+    issue_category: normalizeIssueCategory(item.issue_category),
     recurrence_score: Number(item.recurrence_score ?? 0.5),
     intervention_type: item.intervention_type || 'Escalation',
     status: normalizeEscalationStatus(item),
     created_at: item.created_at || new Date().toISOString(),
     created_by: item.created_by || 'City Operator',
-    incident_id: item.incident_id || null,
+    incident_id: normalizeIncidentId(item.incident_id) || item.incident_id || null,
     reason: item.reason || item.notes || '',
     source: item.source || 'backend',
     linkage_mode: item.linkage_mode || null,
@@ -409,7 +402,7 @@ function buildActionCandidates(hotspots = [], incidents = []) {
 
   return hotspots
     .map((h) => {
-      const [zone = '', issue_category = 'General civic issue'] = String(h.area || '').split(' · ');
+      const [zone = '', issue_category = normalizeIssueCategory('Noise Complaint')] = String(h.area || '').split(' · ');
       const top = zoneTopIncident[zone] || null;
 
       return {
@@ -473,7 +466,7 @@ export const sendChatMessage = async (message) => {
       caveats: data.caveats || [],
       ops: {
         priority: data?.ops?.priority || 'medium',
-        status: data?.ops?.status || 'new',
+        status: normalizeIncidentStatus(data?.ops?.status || 'new'),
         recurrence_score: Number(data?.ops?.recurrence_score ?? 0.4),
         incident_id: normalizeIncidentId(data?.ops?.incident_id) || null
       }
@@ -481,10 +474,10 @@ export const sendChatMessage = async (message) => {
 
     if (responsePayload?.ops?.incident_id) {
       addResidentReport({
-        id: responsePayload.ops.incident_id,
+        id: normalizeIncidentId(responsePayload.ops.incident_id) || responsePayload.ops.incident_id,
         description: message,
-        category: responsePayload.evidence?.[0]?.dataset || 'Civic issue',
-        status: responsePayload.ops.status || 'new',
+        category: normalizeIssueCategory(responsePayload.evidence?.[0]?.dataset),
+        status: normalizeIncidentStatus(responsePayload.ops.status || 'new'),
         submitted_at: new Date().toISOString(),
         priority: responsePayload.ops.priority || 'medium'
       });
@@ -513,7 +506,7 @@ export const sendChatMessage = async (message) => {
           recommended_actions: ['Check My Reports for updates.', 'Add extra details/photos if needed.'],
           evidence: [{ dataset: 'Demo fallback', note: 'Live API unavailable' }],
           assumptions: ['Using stored resident report context in fallback mode.'],
-          caveats: ['Fallback mode active'],
+          caveats: ['Fallback mode enabled'],
           ops: { priority: 'medium', status: 'new', recurrence_score: 0.42, incident_id: nextCtx.lastIncidentId }
         };
       }
@@ -534,7 +527,7 @@ export const sendChatMessage = async (message) => {
           recommended_actions: ['Provide full name of the reporter.', 'Share exact location (address/intersection/landmark).'],
           evidence: [{ dataset: 'Demo fallback', note: 'Live API unavailable' }],
           assumptions: ['Fallback intake validation'],
-          caveats: ['Fallback mode active'],
+          caveats: ['Fallback mode enabled'],
           ops: { priority: 'medium', status: 'new', recurrence_score: 0.35, incident_id: null }
         };
       }
@@ -543,10 +536,10 @@ export const sendChatMessage = async (message) => {
       nextCtx.lastIncidentId = incidentId;
       saveResidentContext(nextCtx);
       addResidentReport({
-        id: incidentId,
+        id: normalizeIncidentId(incidentId) || incidentId,
         description: message,
-        category: 'Civic issue',
-        status: 'new',
+        category: normalizeIssueCategory('Civic issue'),
+        status: normalizeIncidentStatus('new'),
         submitted_at: new Date().toISOString(),
         priority: 'medium'
       });
@@ -557,7 +550,7 @@ export const sendChatMessage = async (message) => {
         insights: ['Resident report intake completed with required details.'],
         recommended_actions: ['Keep this Report ID for follow-up.', 'Check My Reports for updates.'],
         evidence: [{ dataset: 'Demo fallback', note: 'Live API unavailable' }],
-        assumptions: ['Fallback mode active'],
+        assumptions: ['Fallback mode enabled'],
         caveats: ['Live backend unavailable; using local continuity.'],
         ops: { priority: 'medium', status: 'new', recurrence_score: 0.42, incident_id: incidentId }
       };
@@ -654,7 +647,7 @@ export const getInsights = async () => {
           action_candidates: (mockInsights.hotspots || []).map((h) => ({
             area: h.area,
             zone: h.area,
-            issue_category: 'General civic issue',
+            issue_category: normalizeIssueCategory('Noise Complaint'),
             recurrence_score: h.recurrence_score,
             incidents: h.incidents,
             priority: riskFromScore(h.recurrence_score),
@@ -958,13 +951,13 @@ export const getResidentCategories = async () => {
   try {
     const payload = await apiRequest('/datasets/categories', { role: ROLE.RESIDENT });
     return {
-      categories: payload.categories || [],
+      categories: sanitizeResidentCategories(payload.categories || []),
       byDataset: payload.by_dataset || {},
       lastRefreshAt: payload.last_refresh_at || null,
     };
   } catch (err) {
     return withFallback('getResidentCategories', err, async () => ({
-      categories: ['Illegal Dumping', 'Noise Complaint', 'Road Damage', 'Street Light Outage', 'Standing Water'],
+      categories: sanitizeResidentCategories(issueCategories),
       byDataset: {},
       lastRefreshAt: null,
     }));

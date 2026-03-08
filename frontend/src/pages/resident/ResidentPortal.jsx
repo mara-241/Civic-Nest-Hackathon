@@ -16,6 +16,7 @@ import { sendChatMessage, getMyReports, getResidentCategories } from '../../serv
 import { MessageSquare, FileText, Clock } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { issueCategories as canonicalIssueCategories } from '../../mockData/incidents';
+import { normalizeIncidentId, normalizeIncidentStatus, normalizeIssueCategory, sanitizeResidentCategories } from '../../lib/civicNormalization';
 
 const tabRouteMap = {
   assistant: '/resident',
@@ -40,19 +41,19 @@ const issueMapping = {
   'road': { category: 'Road Damage', zone: 'Zone 1', intervention: 'Priority road repair scheduling' },
   'water': { category: 'Standing Water', zone: 'Zone 5', intervention: 'Drainage inspection + mosquito treatment' },
   'flooding': { category: 'Drainage Issue', zone: 'Zone 2', intervention: 'Emergency drainage assessment' },
-  'mosquito': { category: 'Environmental Hazard', zone: 'Zone 5', intervention: 'Mosquito spraying schedule priority' },
+  'mosquito': { category: 'Mosquito Concern', zone: 'Zone 5', intervention: 'Mosquito spraying schedule priority' },
   'light': { category: 'Street Light Outage', zone: 'Zone 6', intervention: 'Utilities team dispatch' },
-  'default': { category: 'General Civic Issue', zone: 'Zone 4', intervention: 'Standard review and triage' }
+  'default': { category: 'Noise Complaint', zone: 'Zone 4', intervention: 'Standard review and triage' }
 };
 
 const getIssueDetails = (message) => {
   const lowerMessage = message.toLowerCase();
   for (const [keyword, details] of Object.entries(issueMapping)) {
     if (keyword !== 'default' && lowerMessage.includes(keyword)) {
-      return details;
+      return { ...details, category: normalizeIssueCategory(details.category) };
     }
   }
-  return issueMapping.default;
+  return { ...issueMapping.default, category: normalizeIssueCategory(issueMapping.default.category) };
 };
 
 
@@ -156,25 +157,25 @@ export default function ResidentPortal() {
 
   useEffect(() => {
     if (!isReportsPage) return;
-    let active = true;
+    let isMounted = true;
     getMyReports().then((items) => {
-      if (active) setReports(items || []);
+      if (isMounted) setReports(items || []);
     }).catch(() => {
-      if (active) setReports([]);
+      if (isMounted) setReports([]);
     });
-    return () => { active = false; };
+    return () => { isMounted = false; };
   }, [isReportsPage, messages.length]);
 
   useEffect(() => {
-    let active = true;
+    let isMounted = true;
     getResidentCategories()
       .then((payload) => {
-        if (active) setDatasetCategories(payload?.categories || []);
+        if (isMounted) setDatasetCategories(sanitizeResidentCategories(payload?.categories || []));
       })
       .catch(() => {
-        if (active) setDatasetCategories([]);
+        if (isMounted) setDatasetCategories([]);
       });
-    return () => { active = false; };
+    return () => { isMounted = false; };
   }, []);
 
   const handleSend = async (message = input) => {
@@ -194,8 +195,9 @@ export default function ResidentPortal() {
     // to avoid re-triggering intake gate or creating duplicate report IDs.
     const followupIntent = /\b(update|status|follow\s*-?up|progress|any\s+update)\b/i.test(trimmedMessage);
     if (intakeComplete && followupIntent) {
+      const normalizedFollowupId = normalizeIncidentId(intakeDraft.completedIncidentId) || intakeDraft.completedIncidentId;
       const followupResponse = {
-        answer: `You’re following up on Report ID ${intakeDraft.completedIncidentId}. Current status: new. The operations team has it in queue and will update this as triage progresses.`,
+        answer: `You’re following up on Report ID ${normalizedFollowupId}. Current status: new. The operations team has it in queue and will update this as triage progresses.`,
         confidence: 0.8,
         insights: ['Follow-up linked to existing report context.'],
         recommended_actions: ['Check My Reports for updates.', 'Add extra details/photos if needed.'],
@@ -206,7 +208,7 @@ export default function ResidentPortal() {
           priority: 'medium',
           status: 'new',
           recurrence_score: 0.35,
-          incident_id: intakeDraft.completedIncidentId,
+          incident_id: normalizedFollowupId,
         }
       };
       setMessages(prev => [...prev, { type: 'bot', content: followupResponse, userQuery: trimmedMessage }]);
@@ -251,7 +253,8 @@ export default function ResidentPortal() {
       }]);
 
       if (response?.ops?.incident_id) {
-        setIntakeDraft((prev) => ({ ...prev, completedIncidentId: response.ops.incident_id }));
+        const normalizedIncidentId = normalizeIncidentId(response.ops.incident_id) || response.ops.incident_id;
+        setIntakeDraft((prev) => ({ ...prev, completedIncidentId: normalizedIncidentId }));
       }
 
       getMyReports().then((items) => setReports(items || []));
@@ -330,21 +333,24 @@ export default function ResidentPortal() {
                 <p className="text-sm text-slate-500">No reports yet. Submit a report from Civic Assistant and it will appear here.</p>
               ) : (
                 <div className="space-y-3">
-                  {reports.map((r) => (
-                    <Card key={r.id} className="border-slate-200">
+                  {reports.map((r) => {
+                    const reportId = normalizeIncidentId(r.id || r.incident_id) || r.id || r.incident_id;
+                    const reportStatus = normalizeIncidentStatus(r.status);
+                    return (
+                    <Card key={r.id || reportId} className="border-slate-200">
                       <CardContent className="py-3 px-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className="text-xs text-slate-500">Report ID</p>
-                            <p className="text-sm font-semibold text-civic-blue">{r.id}</p>
+                            <p className="text-sm font-semibold text-civic-blue">{reportId}</p>
                           </div>
                           <PriorityBadge priority={r.priority || 'medium'} />
                         </div>
                         <p className="text-sm text-slate-700 mt-2">{r.description}</p>
-                        <p className="text-xs text-slate-500 mt-1">Status: {r.status} • Submitted: {new Date(r.submitted_at).toLocaleString()}</p>
+                        <p className="text-xs text-slate-500 mt-1">Status: {reportStatus} • Submitted: {new Date(r.submitted_at).toLocaleString()}</p>
                       </CardContent>
                     </Card>
-                  ))}
+                  );})}
                 </div>
               )}
             </div>
@@ -519,7 +525,7 @@ const MessageBubble = ({ message }) => {
           <Card className="border-slate-200 max-w-[85%]">
             <CardContent className="py-3 px-4">
               <p className="text-xs text-slate-500">Report ID</p>
-              <p className="text-sm font-semibold text-civic-blue" data-testid="resident-report-id">{message.content.ops.incident_id}</p>
+              <p className="text-sm font-semibold text-civic-blue" data-testid="resident-report-id">{normalizeIncidentId(message.content.ops.incident_id) || message.content.ops.incident_id}</p>
             </CardContent>
           </Card>
         )}
