@@ -88,3 +88,6 @@ frontend/node_modules/.cache/default-development/1.pack
 # Environment files
 *.env
 *.env.*
+
+# Emergent local metadata
+.emergent/
