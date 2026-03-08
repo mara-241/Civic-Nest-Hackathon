@@ -216,9 +216,17 @@ async function apiRequest(path, { method = 'GET', role = ROLE.RESIDENT, body } =
   return parsed;
 }
 
+function normalizeIncidentId(raw) {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  if (/^INC-[A-Z0-9]+$/i.test(value)) return value.toUpperCase();
+  if (/^inc_[a-z0-9]+$/i.test(value)) return `INC-${value.slice(4).toUpperCase()}`;
+  return value;
+}
+
 function normalizeIncident(item = {}) {
   return {
-    incident_id: item.incident_id || item.id || `INC-${Math.floor(Math.random() * 9000 + 1000)}`,
+    incident_id: normalizeIncidentId(item.incident_id || item.id) || `INC-${Math.floor(Math.random() * 9000 + 1000)}`,
     source_dataset: item.source_dataset || 'Civic Source',
     issue_category: item.issue_category || 'General Civic Issue',
     reported_at: item.reported_at || item.last_action_at || new Date().toISOString(),
@@ -467,7 +475,7 @@ export const sendChatMessage = async (message) => {
         priority: data?.ops?.priority || 'medium',
         status: data?.ops?.status || 'new',
         recurrence_score: Number(data?.ops?.recurrence_score ?? 0.4),
-        incident_id: data?.ops?.incident_id || null
+        incident_id: normalizeIncidentId(data?.ops?.incident_id) || null
       }
     };
 
@@ -531,7 +539,7 @@ export const sendChatMessage = async (message) => {
         };
       }
 
-      const incidentId = `inc_${Math.random().toString(16).slice(2, 14)}`;
+      const incidentId = `INC-${Math.random().toString(16).slice(2, 14).toUpperCase()}`;
       nextCtx.lastIncidentId = incidentId;
       saveResidentContext(nextCtx);
       addResidentReport({
@@ -710,7 +718,8 @@ export const getOpsQueue = async (filters = {}) => {
 // Update incident status - PATCH /ops/incidents/{id}/status
 export const updateIncidentStatus = async (incidentId, newStatus) => {
   try {
-    const payload = await apiRequest(`/ops/incidents/${incidentId}/status`, {
+    const normalizedIncidentId = normalizeIncidentId(incidentId) || incidentId;
+    const payload = await apiRequest(`/ops/incidents/${normalizedIncidentId}/status`, {
       method: 'PATCH',
       role: ROLE.WORKER,
       body: { status: newStatus }
@@ -719,7 +728,7 @@ export const updateIncidentStatus = async (incidentId, newStatus) => {
     return {
       success: true,
       incident: {
-        incident_id: payload.incident_id,
+        incident_id: normalizeIncidentId(payload.incident_id) || payload.incident_id,
         status: payload.status
       }
     };
@@ -795,7 +804,8 @@ export const createEscalation = async (escalationData) => {
     let linkageMode = 'explicit_incident';
 
     if (escalationData.incident_id) {
-      target = incidents.find((i) => i.incident_id === escalationData.incident_id) || null;
+      const requestedId = normalizeIncidentId(escalationData.incident_id) || escalationData.incident_id;
+      target = incidents.find((i) => i.incident_id === requestedId) || null;
     }
 
     if (!target) {
