@@ -26,7 +26,12 @@ function loadResidentReports() {
   try {
     const raw = window.localStorage.getItem(RESIDENT_REPORTS_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    const reports = Array.isArray(parsed) ? parsed : [];
+    return reports.map((r) => ({
+      ...r,
+      id: normalizeIncidentId(r?.id) || r?.id,
+      status: normalizeIncidentStatus(r?.status),
+    }));
   } catch {
     return [];
   }
@@ -53,7 +58,7 @@ function loadResidentContext() {
     return {
       reporterName: parsed?.reporterName || '',
       exactLocation: parsed?.exactLocation || '',
-      lastIncidentId: parsed?.lastIncidentId || ''
+      lastIncidentId: normalizeIncidentId(parsed?.lastIncidentId) || ''
     };
   } catch {
     return { reporterName: '', exactLocation: '', lastIncidentId: '' };
@@ -143,7 +148,8 @@ function loadEscalationsCache() {
   try {
     const raw = window.localStorage.getItem(ESCALATIONS_CACHE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    const items = Array.isArray(parsed) ? parsed : [];
+    return items.map((x) => ({ ...x, incident_id: normalizeIncidentId(x?.incident_id) || x?.incident_id || null }));
   } catch {
     return [];
   }
